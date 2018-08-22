@@ -1,0 +1,17 @@
+{{- range $i, $group := .Values.benchmarkGroups }}
+{{- range $s := until (int $group.shares) }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ printf "cephfsperf-%d-%d-pvc" $i $s }}
+  releaseName: {{ $.Release.Name }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1G
+  storageClassName: {{ $.Values.storageClassName }}
+---
+{{- end }}
+{{- end }}

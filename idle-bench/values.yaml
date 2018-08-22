@@ -1,0 +1,4 @@
+storageClassName: manila-csicephfs-share
+benchmarkGroups:
+  - shares: 5
+    replicas: 5

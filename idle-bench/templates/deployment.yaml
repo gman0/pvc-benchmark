@@ -1,0 +1,39 @@
+{{- range $i, $group := .Values.benchmarkGroups }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ printf "cephfsperf-%d-deploy" $i }}
+  labels:
+    app: cephfsperf
+    releaseName: {{ $.Release.Name }}
+spec:
+  replicas: {{ $group.replicas }}
+  selector:
+    matchLabels:
+      app: cephfsperf
+      releaseName: {{ $.Release.Name }}
+  template:
+    metadata:
+      labels:
+        app: cephfsperf
+        releaseName: {{ $.Release.Name }}
+    spec:
+      volumes:
+        {{- range $s := until (int $group.shares) }}
+        - name: manila-cephfs-{{ $s }}
+          persistentVolumeClaim:
+            claimName: {{ printf "cephfsperf-%d-%d-pvc" $i $s }}
+            readOnly: false
+        {{- end }}
+      containers:
+        - name: cephfsperf
+          image: busybox
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/sh", "-c", "trap : TERM INT; (while true; do sleep 1000; done) & wait" ]
+          volumeMounts:
+            {{- range $s := until (int $group.shares) }}
+            - name: manila-cephfs-{{ $s }}
+              mountPath: /fio-volumes/cephfs-{{ $s }}
+            {{- end }}
+---
+{{- end }}
